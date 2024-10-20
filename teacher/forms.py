@@ -3,7 +3,6 @@ import re
 from typing import Any
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from faker import Faker
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError, modelformset_factory
 from django.db import models
@@ -11,7 +10,6 @@ from teacher.models import   Group, GroupSpec, Lesson, Score_Attendance, Skill, 
 from django.contrib.auth.models import Group as GroupType
 from teacher.models import Group, GroupSpec, Lesson, Score_Attendance, Student
 
-fake = Faker()
 
 User = get_user_model()
 

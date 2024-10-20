@@ -1,12 +1,10 @@
 from typing import Any
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission, Group
-from faker import Faker
 from django.contrib.auth.forms import UserCreationForm
 
 from django import forms
 
-fake = Faker()
 
 User = get_user_model()
 
