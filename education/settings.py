@@ -29,7 +29,7 @@ DEBUG = False
 
 # ALLOWED_HOSTS = []
 
-ALLOWED_HOSTS = ['your-app-name.up.railway.app', 'localhost']
+ALLOWED_HOSTS = ['education707', 'localhost']
 
 # Application definition
 
