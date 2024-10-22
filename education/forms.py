@@ -17,7 +17,7 @@ class AddManagerForm(UserCreationForm):
     def save(self, commit: bool = True) -> Any:
         user = super().save(commit=commit)
         user.is_staff = True
-        permission_group = Group.objects.get(name='Manager')
+        permission_group = Group.objects.get(name='Teacher')
         user.groups.add(permission_group)
         if commit:
             user.save()
