@@ -10,8 +10,8 @@ from django.urls import reverse
 from django.views import View
 from django.contrib.auth.models import Group as GroupType
 
-from teacher.forms import AddCourseForm, AddDepartmentForm, AddLessonForm, AddProfessorForm, EditLessonForm, EditProfessorForm, AddStudentForm, EditStudentForm, StudentsAttendanceFormSet
-from teacher.models import Group, GroupSpec, Lesson, LessonFiles, Score_Attendance, Student, Teacher
+from teacher.forms import AddCourseForm, AddDepartmentForm, AddLessonForm, AddProfessorForm, AddSkillForm, EditLessonForm, EditProfessorForm, AddStudentForm, EditSkillForm, EditStudentForm, StudentsAttendanceFormSet
+from teacher.models import Group, GroupSpec, Lesson, LessonFiles, Score_Attendance, Skill, Student, Teacher
 
 # Create your views here.
 
