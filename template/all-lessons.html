@@ -48,10 +48,10 @@
 										<tbody>
 											{% for lesson in lessons %}
 											<tr>
-												<td></td>
-												<td>{{lesson.theme}}</td>
+												<td>{{forloop.counter}}</td>
+												<td>{{lesson.theme|truncatechars:20}}</td>
 												<td>{{lesson.date|date:'d/M/y'}}</td>
-												<td>{{lesson.description}}</td>
+												<td>{{lesson.description|truncatechars:100}}</td>
 												<td>{{lesson.group.name.name}}, Language: {{lesson.group.get_lang_display}}</td>
 												<td>
 													<a href="{% url 'edit_lesson' lesson.id %}" class="btn btn-sm btn-primary"><i class="la la-pencil"></i></a>
