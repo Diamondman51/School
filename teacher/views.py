@@ -9,7 +9,7 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views import View
 from django.contrib.auth.models import Group as GroupType
-
+from django import forms 
 from teacher.forms import AddCourseForm, AddDepartmentForm, AddLessonForm, AddProfessorForm, AddSkillForm, EditLessonForm, EditProfessorForm, AddStudentForm, EditSkillForm, EditStudentForm, StudentsAttendanceFormSet
 from teacher.models import Group, GroupSpec, Lesson, LessonFiles, Score_Attendance, Skill, Student, Teacher
 
@@ -261,6 +261,61 @@ class DeleteCoursesViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
         return HttpResponseRedirect(request.META.get("HTTP_REFERER", ""))
 
 
+class ViewFilesViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
+    login_url = 'login'
+    permission_required = 'teacher.edit_course'
+
+    def get(self, request, lesson_id):
+        lesson = Lesson.objects.get(id=lesson_id)
+        files = LessonFiles.objects.filter(lesson=lesson)
+        form = EditLessonForm(instance=lesson)
+        # form.theme = forms.CharField(widget=forms.TextInput(attrs={"type": 'text', 'readonly': 'true'}))
+        form.fields['theme'].widget.attrs.update({
+            "readonly": "true",
+            "type": "text"
+        })        
+        form.fields['date'].widget.attrs.update({
+            "readonly": "true",
+            "type": "text"
+        })
+        form.fields['description'].widget.attrs.update({
+            "readonly": "true",
+            "type": "text"
+        })
+
+        context = {
+            'form': form,
+            'files': files,
+            'lesson': lesson,
+        }
+        return TemplateResponse(request, 'view-files.html', context)
+        
+    
+    def post(self, request, lesson_id):
+        lesson = Lesson.objects.get(id=lesson_id)
+        group_id = lesson.group
+        form = EditLessonForm(request.POST, instance=lesson)
+        print('--------------------------------------------')
+        print(form)
+        print('--------------------------------------------')
+        print(form.is_valid())
+
+        files = request.FILES.getlist('files', None)
+        if files:
+            for file in files:
+                LessonFiles.objects.create(
+                    lesson=lesson,
+                    file=file,
+                )
+            return redirect('view_course', group_id.id)
+        # files = LessonFiles.objects.filter(lesson=lesson)
+        # context = {
+        #     "form": form,
+        #     'files': files,
+        #     'lesson': lesson,
+        # }
+        # return TemplateResponse(request, 'edit-lesson.html', context)
+
 class AllLessonsViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
     login_url = 'login'
     permission_required = 'teacher.view_lesson'
@@ -357,6 +412,16 @@ def delete_lesson_file(request, lesson_file_id):
     # os.pa
     lesson_file.delete()
     return redirect("edit_lesson", lesson_id=lesson_id)
+
+
+def delete_lesson_file2(request, lesson_file_id):
+    print("+++++++++++++++++++++++++++++++++++++++++++")
+    lesson_file = get_object_or_404(LessonFiles, id=lesson_file_id)
+    lesson_id = lesson_file.lesson.id
+    lesson_file.file.delete()
+    # os.pa
+    lesson_file.delete()
+    return redirect("view_lesson_file", lesson_id=lesson_id)
 
 
 class AboutCoursesViewset(LoginRequiredMixin, View):

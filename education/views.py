@@ -74,4 +74,7 @@ class LogOut(View):
     def get(self, request):
         logout(request)
         return redirect("login")
-    
+
+
+# def main(request):
+#     return render(request, "index-3.html")

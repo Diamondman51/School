@@ -28,6 +28,7 @@ from .views import home
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # path('main/', main),
     path("", home, name="home"),
     path("register/", AddManagerViewset.as_view(), name="register"),
     path('education/', include('teacher.urls')),

@@ -55,14 +55,26 @@ class LessonFilesAdmin(admin.ModelAdmin):
 class Score_AttendanceAdmin(admin.ModelAdmin):
     list_display = ['id', 'student', 'lesson', 'mark', 'is_present']
 
+
 class DeparmentAdmin(admin.ModelAdmin):
     list_display = ['id', 'name',"description"]
+
+
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ['id', 'theme',"date", "group"]
+    list_display_links = ("id", "theme")
+
+
+class GroupAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'course_code']
+
+
 # Register your models here.
 admin.site.register(Teacher, TeacherAdmin)
 # admin.site.register(TeacherManager)
-admin.site.register(Group)
+admin.site.register(Group, GroupAdmin)
 admin.site.register(Student, StudentAdmin)
-admin.site.register(Lesson)
+admin.site.register(Lesson, LessonAdmin)
 admin.site.register(Score_Attendance, Score_AttendanceAdmin)
 admin.site.register(Skill)
 admin.site.register(GroupLikes)

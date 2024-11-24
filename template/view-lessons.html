@@ -42,6 +42,7 @@
 												<th>Date</th>
 												<th>description</th>
 												<th>Group</th>
+												<th>Files</th>
 												<th>Edit</th>
 											</tr>
 										</thead>
@@ -51,8 +52,11 @@
 												<td></td>
 												<td>{{lesson.theme}}</td>
 												<td>{{lesson.date|date:'d/M/y'}}</td>
-												<td>{{lesson.description}}</td>
+												<td>{{lesson.description|truncatechars:80}}</td>
 												<td>{{lesson.group.name.name}}, Language: {{lesson.group.get_lang_display}}</td>
+												<td>
+													<a href="{% url 'view_lesson_file' lesson.id %}" class="btn btn-sm btn-primary">Attached Files</a>
+												</td>
 												<td>
 													<a href="{% url 'attendance' lesson.id %}" class="btn btn-sm btn-primary">Attendance</a>
 												</td>												
