@@ -32,4 +32,5 @@ urlpatterns = [
     path('add_skill/',AddSkillViewset.as_view(),name="add_skill"),
     path('edit_skill/<int:skill_id>/',EditSkillViewset.as_view(),name="edit_skill"),
     path('delete_skill/<int:skill_id>/',DeleteSkillViewset.as_view(),name="delete_skill"),
+    path("add_like/<int:group_id>", AddLikeView.as_view(), name="add_like"),
 ]

@@ -21,6 +21,11 @@
                 </div>
 
                 <div class="row">
+                    {% if not courses %}
+                    <div class="col-xl-3 col-xxl-4 col-lg-4 col-md-6 col-sm-6 p-5">
+                        <h4 class="text-danger">You do not have courses</h4>
+                    </div>
+                    {% else %}
                     {% for course in courses %}
 					<div class="col-xl-3 col-xxl-4 col-lg-4 col-md-6 col-sm-6">
 						<div class="card">
@@ -29,9 +34,13 @@
 								<h4>{{course.description}}</h4>
 								<ul class="list-group mb-3 list-group-flush">
 									<li class="list-group-item px-0 border-top-0 d-flex justify-content-between"><span class="mb-0 text-muted">{{course.start_from|date:'M y'}}</span>
-										<a href="javascript:void(0);"><i class="la la-heart-o mr-1"></i><strong>230</strong></a></li>
+										<a href="" id="like-{{course.id}}" onclick="sendlike(event)">
+                                            <i class="fa-regular fa-heart"></i><strong class="like-count">
+                                            </strong>
+                                        </a>
+                                    </li>
 								    <li class="list-group-item px-0 border-top-0 d-flex justify-content-between"><span class="mb-0 text-muted">Course Name</span>
-										<strong>{{course.name}}</strong></li>
+										<strong class="likes">{{course.name}}</strong></li>
                                     <li class="list-group-item px-0 border-top-0 d-flex justify-content-between"><span class="mb-0 text-muted">Course Code</span>
 										<strong>{{course.course_code}}</strong></li>	
                                     <li class="list-group-item px-0 d-flex justify-content-between">
@@ -48,8 +57,73 @@
                             <a href='{% url "view_course" course.id %}' class="btn btn-outline-success p-1 mx-2 mb-2">View</a>
 						</div>
 					</div>
-                    {% endfor %}
-				
+            <script>
+                async function sendlike(event){
+                const el_id = event.currentTarget.id.replace('like-', '');
+                const icon = event.currentTarget.querySelector('i');
+                const likes = event.currentTarget.querySelector('strong');
+                event.preventDefault();
+                try {
+                    const res = await fetch(`/education/add_like/${el_id}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    });
+                    const data = await res.json();
+                    likes.textContent = ' ' + data.likes;
+                    if (data.liked) {
+
+                        icon.classList.replace("fa-regular", "fa-solid");
+                    }
+                    else {
+
+                        icon.classList.replace("fa-solid", "fa-regular");
+                    }
+                    
+                } catch (error) {
+                    console.log('Error fetching data: ', error);
+                }
+            }
+
+            async function getlike () {
+                const likeElements = document.querySelectorAll("a[id^='like-']");
+
+                for (let likeEl of likeElements) {
+                    const course_id = likeEl.id.replace('like-', '');
+                    const count = likeEl.querySelector('.like-count');
+                    const icon = likeEl.querySelector('i');
+                    try {
+                        const res = await fetch(`/education/add_like/${course_id}`, 
+                            {
+                            method: 'GET',
+                            }
+                        );
+                        const data = await res.json();
+                        count.textContent = ' ' + data.likes;
+                        if (data.liked) {
+                            icon.classList.replace("fa-regular", "fa-solid");
+                        }
+                        else {
+                            icon.classList.replace("fa-solid", "fa-regular");
+                        }
+                    } catch (error) {
+                        console.log('Error fetching data: ', error);
+                    }
+                };
+
+                const res = await fetch(`/education/add_like/${el_id}`);
+                const data = await res.json();
+                const likes = event.currentTarget.querySelector('strong');
+                likes.textContent = ' ' + data.likes;
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                getlike();
+            })
+            </script>
+                {% endfor %}
+				{% endif %}
             </div>
 </div>
 {% endblock %}

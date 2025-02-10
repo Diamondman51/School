@@ -1,17 +1,14 @@
-import os
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import QuerySet
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
-from django.urls import reverse
 from django.views import View
+from django.http import HttpResponse
 from django.contrib.auth.models import Group as GroupType
 
-from teacher.forms import AddCourseForm, AddDepartmentForm, AddLessonForm, AddProfessorForm, EditLessonForm, EditProfessorForm, AddStudentForm, EditStudentForm, StudentsAttendanceFormSet
-from teacher.models import Group, GroupSpec, Lesson, LessonFiles, Score_Attendance, Student, Teacher
+from teacher.forms import AddCourseForm, AddDepartmentForm, AddLessonForm, AddProfessorForm, AddSkillForm, EditLessonForm, EditProfessorForm, AddStudentForm, EditSkillForm, EditStudentForm, StudentsAttendanceFormSet
+from teacher.models import Group, GroupLikes, GroupSpec, Lesson, LessonFiles, Score_Attendance, Skill, Student, Teacher
 
 # Create your views here.
 
@@ -23,6 +20,12 @@ class AllProfessorsViewset(LoginRequiredMixin, View):
     login_url = "login"
 
     def get(self, request):
+        """
+        Renders a page with a list of all professors.
+
+        :param request: Request object
+        :return: TemplateResponse object
+        """
         teachers = User.objects.filter(groups=GroupType.objects.get(name='Teacher'))
         context = {"teachers": teachers}
         return TemplateResponse(request, 'all-professors.html', context)
@@ -33,6 +36,12 @@ class AddProfessorViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'teacher.add_teacher'
     
     def get(self, request):
+        """
+        Renders a page with a form to add a new professor.
+
+        :param request: Request object
+        :return: TemplateResponse object
+        """
         form = AddProfessorForm()
         context = {
             'form': form,
@@ -40,6 +49,16 @@ class AddProfessorViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
         return TemplateResponse(request, "add-professor.html", context)
     
     def post(self, request):
+        
+        """
+        Handles the POST request of adding a new professor.
+
+        Checks if the form is valid, if so it saves the form and redirects to the all professors page.
+        If the form is not valid, it renders the same page with the form errors displayed.
+
+        :param request: Request object
+        :return: TemplateResponse object
+        """
         form = AddProfessorForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
@@ -55,6 +74,13 @@ class EditProfessorViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'teacher.change_teacher'
 
     def get(self, request, professor_id):
+        """
+        Renders a page with a form to edit an existing professor.
+
+        :param request: Request object
+        :param professor_id: int, the id of the professor to edit
+        :return: TemplateResponse object
+        """
         teacher = get_object_or_404(User, id=professor_id)
         form = EditProfessorForm(instance=teacher)
         context = {
@@ -66,6 +92,17 @@ class EditProfessorViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
         return TemplateResponse(request, 'edit-professor.html', context)
     
     def post(self, request, professor_id):
+        
+        """
+        Handles the POST request of editing an existing professor.
+
+        Checks if the form is valid, if so it saves the form and redirects to the all professors page.
+        If the form is not valid, it renders the same page with the form errors displayed.
+
+        :param request: Request object
+        :param professor_id: int, the id of the professor to edit
+        :return: TemplateResponse object
+        """
         teacher = get_object_or_404(User, id=professor_id)
         form = EditProfessorForm(request.POST, request.FILES, instance=teacher)
         if form.is_valid():
@@ -82,6 +119,15 @@ class EditProfessorViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
 class ProfessorProfileViewset(LoginRequiredMixin, View):
     login_url = 'login'
     def get(self, request, professor_id):
+        """
+        Handles the GET request of the professor profile page.
+
+        Retrieves the professor with the given id and renders the professor profile page.
+
+        :param request: Request object
+        :param professor_id: int, the id of the professor
+        :return: TemplateResponse object
+        """
         professor = get_object_or_404(User, id=professor_id)
         context = {
             'professor': professor,
@@ -94,6 +140,15 @@ class DeleteProfessorViewset(PermissionRequiredMixin, LoginRequiredMixin, View):
     permission_required = ["teacher.delete_teacher"]
 
     def get(self, request, professor_id=None):
+        """
+        Handles the GET request of the delete professor page.
+
+        Retrieves the professor with the given id, deletes it and redirects to the previous page.
+
+        :param request: Request object
+        :param professor_id: int, the id of the professor to delete
+        :return: HttpResponseRedirect object
+        """
         if professor_id:
             teacher = get_object_or_404(User, id=professor_id)
             teacher.delete()
@@ -107,6 +162,14 @@ class AllStudentsViewset(LoginRequiredMixin, View):
     def get(self, request):
         # print(type(GroupType(request.user.groups.all())), GroupType(request.user.groups.all()), ''.join([group.name for group in request.user.groups.all()]) == GroupType.objects.get(name="Teacher"), GroupType.objects.get(name="Teacher"), type(GroupType.objects.get(name="Teacher")), 'User groups ===============================')
         # print([group.name for group in request.user.groups.all()])
+        """
+        Handles the GET request of the all students page.
+
+        Retrieves all students, either of the teacher that is logged in or of all students if the user is a manager.
+
+        :param request: Request object
+        :return: TemplateResponse object
+        """
         if 'Teacher' in [group.name for group in request.user.groups.all()]:
             students = Student.objects.filter(group__teacher__first_name=request.user.first_name)
         else:
@@ -124,6 +187,14 @@ class AddStudentViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'teacher.add_student'
 
     def get(self, request):
+        """
+        Handles the GET request of the add student page.
+
+        Retrieves an empty form to add a new student.
+
+        :param request: Request object
+        :return: TemplateResponse object
+        """
         form = AddStudentForm()
         context = {
             'form': form,
@@ -131,6 +202,15 @@ class AddStudentViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
         return TemplateResponse(request, "add-student.html",context)
 
     def post(self, request,):
+        '''
+        Handles the POST request of the add student page.
+
+        Checks if the form is valid, if so it saves the form and redirects to the all students page.
+        If the form is not valid, it renders the same page with the form errors displayed.
+
+        :param request: Request object
+        :return: TemplateResponse object
+        '''
         form = AddStudentForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
@@ -145,6 +225,15 @@ class EditStudentViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'teacher.change_student'
 
     def get(self, request,student_id):
+        """
+        Handles the GET request of the edit student page.
+
+        Retrieves the student with the given student_id and an empty form to edit the student.
+
+        :param request: Request object
+        :param student_id: The id of the student to edit
+        :return: TemplateResponse object
+        """
         student = get_object_or_404(Student, id=student_id)
         form = EditStudentForm(instance=student)
         context = {
@@ -154,6 +243,17 @@ class EditStudentViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
         return TemplateResponse(request, 'edit-student.html',context)
 
     def post(self, request, student_id):
+        """
+        Handles the POST request of the edit student page.
+
+        Retrieves the student with the given student_id, updates the student with the data from the form, and saves the student.
+
+        If the form is valid, it redirects to the all students page, otherwise it renders the same page with the form errors displayed.
+
+        :param request: Request object
+        :param student_id: The id of the student to edit
+        :return: TemplateResponse object
+        """
         student = get_object_or_404(Student, id=student_id)
         form = EditStudentForm(request.POST,request.FILES,instance=student)
         if form.is_valid():
@@ -192,11 +292,13 @@ class StudentProfileViewset(LoginRequiredMixin, View):
 class AllCoursesViewset(LoginRequiredMixin, View):
     login_url = 'login'
     def get(self, request):
-        print([group.name for group in request.user.groups.all()])
+        # print([group.name for group in request.user.groups.all()])
         if 'Teacher' in [group.name for group in request.user.groups.all()]:
-            courses = Group.objects.filter(teacher__first_name=request.user.first_name)
-        else:
+            courses = Group.objects.filter(teacher__id=request.user.id)
+        elif request.user.is_admin:
             courses = Group.objects.all()
+        else:
+            courses = None
         context = {
             "courses": courses
             }
@@ -367,8 +469,11 @@ class AboutCoursesViewset(LoginRequiredMixin, View):
     login_url = 'login'
     def get(self, request, course_id):
         course = get_object_or_404(Group, id=course_id)
+        courses = Group.objects.all().exclude(id=course_id)
+        print(course.duration)
         context = {
-            course: course
+            'course': course,
+            'courses': courses
         }
         return TemplateResponse(request, 'about-courses.html', context)
 
@@ -587,3 +692,42 @@ class EditSkillViewset(LoginRequiredMixin, PermissionRequiredMixin, View):
         print(form.data)
         return TemplateResponse(request, 'edit-skill.html', context)
     
+
+class AddLikeView(LoginRequiredMixin, View):
+    login_url = 'login'
+
+    def get(self, request, group_id):
+        group = get_object_or_404(Group, id=group_id)
+        print('Get request------------------------')
+        user = Teacher.objects.get(id=request.user.id)
+        like= GroupLikes.objects.filter(group=group, user_id=user)
+            
+        if like:
+            liked = True
+        
+        if not like:
+            liked = False
+
+        likes = group.grouplikes_set.count()
+        return JsonResponse({'likes': likes, 'liked': liked})
+
+    def post(self, request, group_id):
+        try:
+            group = get_object_or_404(Group, id=group_id)
+            user = Teacher.objects.get(id=request.user.id)
+
+            like, created = GroupLikes.objects.get_or_create(group=group, user_id=user)
+            
+            if created:
+                like.save()
+                liked = True
+            
+            if not created:
+                like.delete()
+                liked = False
+
+            likes = group.grouplikes_set.count()
+            return JsonResponse({'liked': liked, 'likes': likes})
+
+        except:
+            return HttpResponse(status=404)

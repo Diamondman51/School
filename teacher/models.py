@@ -1,7 +1,7 @@
 import os
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
-from django.contrib.auth.models import Group, PermissionsMixin
+from django.contrib.auth.models import PermissionsMixin
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
@@ -64,7 +64,7 @@ class Teacher(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=100, unique=True, null=True)
     address = models.TextField(null=True, blank=True)
     gender = models.CharField(max_length=100, choices=GENDER_CHOICES, null=True, blank=False)
-    department = models.ForeignKey('GroupSpec', on_delete=models.CASCADE, null=True, blank=True)
+    department = models.ForeignKey('GroupSpec', on_delete=models.SET_DEFAULT, default=None, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     education = models.CharField(max_length=300, null=True, blank=False)
     profile_photo = models.ImageField(upload_to='professors/profile_photo', null=True, blank=True)
@@ -136,21 +136,25 @@ LANG_CHOICES = (
 
 
 class Group(models.Model):
-    name = models.ForeignKey(GroupSpec, on_delete=models.CASCADE)
+    name = models.ForeignKey(GroupSpec, on_delete=models.SET_DEFAULT, default=None, null=True, blank=True)
     course_code = models.CharField(max_length=100, null=True)
     description = models.TextField()
     start_from = models.DateField(null=True)
     duration = models.IntegerField(default=3)
     price = models.DecimalField(max_digits=9, decimal_places=2, null=True)
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(Teacher, on_delete=models.SET_DEFAULT, default=None, null=True, blank=True)
+    read_more = models.ForeignKey('ReadMore', on_delete=models.SET_DEFAULT, default=None, null=True, blank=False)
     max_student = models.IntegerField(default=10)
     contact_number = models.CharField(max_length=100, null=True)
     lang = models.CharField(max_length=20, choices=LANG_CHOICES, null=True)
     group_photo = models.ImageField(upload_to='courses/course_photo/%Y/%m', null=True, blank=True)
     created_at = models.DateField(auto_now_add=True)
 
+    def f_price(self):
+        return f'{self.price:,}'
+
     def __str__(self):
-        return f'{self.name}. Language: {self.lang}'
+        return f'{self.name}. Language: {self.get_lang_display()}'
 
     def delete(self, using =None, keep_parents =False):
         if self.group_photo:
@@ -159,6 +163,27 @@ class Group(models.Model):
                 os.remove(path)
         return super().delete(using, keep_parents)
 
+
+class ReadMore(models.Model):
+    language = models.CharField(max_length=50, null=True, blank=True)
+    about_course = models.TextField(blank=True, null=True)
+    course_info = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = "Read More"
+
+    def __str__(self):
+        return f'{self.language}'
+
+    def get_about_course(self) -> list[str]:
+        return self.about_course.split('\n')
+    
+    def get_course_info(self) -> list[str]:
+        full = self.course_info.split('\n')
+        start = full[0]
+        mid = full[1:-1]
+        end = full[-1]
+        return start, mid, end
 
 class Student(models.Model):
     first_name = models.CharField(max_length=100)
@@ -195,14 +220,14 @@ class Lesson(models.Model):
     theme = models.CharField(max_length=255)
     date = models.DateField()
     description = models.CharField(max_length=255)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.SET_DEFAULT, default=None, null=True, blank=True)
 
     def __str__(self):
         return f"{self.theme}"
 
 class LessonFiles(models.Model):
     file = models.FileField(null=True, blank=True, upload_to=lesson_file_upload_path)
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, null=True, blank=True)
+    lesson = models.ForeignKey(Lesson, on_delete=models.SET_DEFAULT, default=None, null=True, blank=True)
 
     def __str__(self):
         return f'{self.file.name}'
@@ -219,8 +244,8 @@ class LessonFiles(models.Model):
 
 
 class Score_Attendance(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, blank=True, null=True)
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, blank=True)
+    student = models.ForeignKey(Student, on_delete=models.SET_DEFAULT, default=None, blank=True, null=True)
+    lesson = models.ForeignKey(Lesson, on_delete=models.SET_DEFAULT, default=None, null=True, blank=True)
     mark = models.DecimalField(null=True, blank=True, decimal_places=1, max_digits=3, validators=[MaxValueValidator(10.0), MinValueValidator(0.0)])
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -229,13 +254,15 @@ class Score_Attendance(models.Model):
     def __str__(self):
         return f'{self.student}'
 # class Attendance(models.Model):
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-#     lesson = models.ForeignKey(Lesson,  on_delete=models.CASCADE)
+#     student = models.ForeignKey(Student, on_delete=models.SET_DEFAULT, default=None)
+#     lesson = models.ForeignKey(Lesson, on_delete=models.SET_DEFAULT, default=None)
 
 
 class GroupLikes(models.Model):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    session_id = models.CharField(max_length=255)
+    group = models.ForeignKey(Group, on_delete=models.SET_DEFAULT, default=None, null=True, blank=True)
+    user_id = models.ForeignKey(Teacher, on_delete=models.SET_DEFAULT, default=None, null=True, blank=True)
 
+    class Meta:
+        verbose_name_plural = 'Group Likes'
 
 

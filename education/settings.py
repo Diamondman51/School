@@ -144,6 +144,5 @@ AUTH_USER_MODEL = "teacher.Teacher"
 REST_FRAMEWORK = {
 #     'PAGE_SIZE': 2,
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
-
 }
 

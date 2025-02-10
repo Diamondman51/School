@@ -7,6 +7,7 @@ from faker import Faker
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError, modelformset_factory
 from django.db import models
+from random import randint
 from teacher.models import   Group, GroupSpec, Lesson, Score_Attendance, Skill, Student
 from django.contrib.auth.models import Group as GroupType
 from teacher.models import Group, GroupSpec, Lesson, Score_Attendance, Student
@@ -37,28 +38,31 @@ class AddProfessorForm(UserCreationForm):
         label=''
 )
 
-    # def __init__(self, *args, **kwargs):
-    #     # Accept initial data from kwargs
-    #     initial = kwargs.get('initial', {})
+    def __init__(self, *args, **kwargs):
+        self.one = randint(000, 999)
+        self.two = randint(00, 99)
+        self.three = randint(00, 99)
+        # Accept initial data from kwargs
+        initial = kwargs.get('initial', {})
         
-    #     # Generate fake data if not provided
-    #     initial.setdefault('first_name', fake.first_name())
-    #     initial.setdefault('last_name', fake.last_name())
-    #     initial.setdefault('email', fake.email())
-    #     initial.setdefault('phone', fake.basic_phone_number())
-    #     initial.setdefault('address', fake.address())
-    #     initial.setdefault('gender', fake.random_element(elements=['1', '2']))  # Example gender
-    #     initial.setdefault('department', None)  # Replace with actual default if needed
-    #     initial.setdefault('date_of_birth', fake.date_of_birth(minimum_age=18, maximum_age=65))
-    #     initial.setdefault('education', fake.job())  # Replace with actual default if needed
-    #     initial.setdefault('profile_photo', None)
-    #     initial.setdefault('date_joined', fake.date())
+        # Generate fake data if not provided
+        initial.setdefault('first_name', fake.first_name())
+        initial.setdefault('last_name', fake.last_name())
+        initial.setdefault('email', fake.email())
+        initial.setdefault('phone', f'+998-{randint(10, 100)}-{self.one if self.one > 9 else f'00{self.one}'}-{self.two if self.two > 9 else f'0{self.two}'}-{self.three if self.three > 9 else f'0{self.three}'}')
+        initial.setdefault('address', fake.address())
+        initial.setdefault('gender', fake.random_element(elements=['1', '2']))  # Example gender
+        initial.setdefault('department', None)  # Replace with actual default if needed
+        initial.setdefault('date_of_birth', fake.date_of_birth(minimum_age=18, maximum_age=65))
+        initial.setdefault('education', fake.job())  # Replace with actual default if needed
+        initial.setdefault('profile_photo', None)
+        initial.setdefault('date_joined', fake.date())
         
-    #     super().__init__(*args, **kwargs)
-    #     self.fields['gender'].choices = [('1', 'Male'), ('2', 'Female')]  # Ensure choices are set
+        super().__init__(*args, **kwargs)
+        self.fields['gender'].choices = [('1', 'Male'), ('2', 'Female')]  # Ensure choices are set
 
-    #     # Update form's initial data
-    #     self.initial.update(initial)
+        # Update form's initial data
+        self.initial.update(initial)
     
     def save(self, commit = True):
         user = super().save(commit)
